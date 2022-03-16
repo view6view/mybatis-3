@@ -18,7 +18,8 @@ package org.apache.ibatis.session;
 import java.sql.Connection;
 
 /**
- * Creates an {@link SqlSession} out of a connection or a DataSource
+ * Creates an {@link SqlSession} out of a connection or a DataSource<br>
+ * 从连接或数据源中创建一个 {@link SqlSession}
  *
  * @author Clinton Begin
  */
@@ -26,12 +27,32 @@ public interface SqlSessionFactory {
 
   SqlSession openSession();
 
+  /**
+   * 指定是否开启自动提交，sql commit的三种方式：
+   * @param autoCommit
+   * @return
+   */
   SqlSession openSession(boolean autoCommit);
 
+  /**
+   * 通过连接创建一个 {@link SqlSession}
+   * @param connection 数据库连接（会话）对象
+   * @return
+   */
   SqlSession openSession(Connection connection);
 
+  /**
+   * 通过事务隔离级别创建一个 {@link SqlSession}
+   * @param level 事务隔离级别枚举对象
+   * @return
+   */
   SqlSession openSession(TransactionIsolationLevel level);
 
+  /**
+   * 通过指定执行器级创建一个 {@link SqlSession}
+   * @param execType
+   * @return
+   */
   SqlSession openSession(ExecutorType execType);
 
   SqlSession openSession(ExecutorType execType, boolean autoCommit);
