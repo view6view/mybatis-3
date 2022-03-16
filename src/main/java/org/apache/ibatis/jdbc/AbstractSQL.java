@@ -321,6 +321,7 @@ public abstract class AbstractSQL<T> {
     return getSelf();
   }
 
+
   public T ORDER_BY(String columns) {
     sql().orderBy.add(columns);
     return getSelf();
@@ -340,8 +341,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the limit variable string(e.g. {@code "#{limit}"}).
-   *
+   * Set the limit variable string(e.g. {@code "#{limit}"}).<br>
+   * 设置查询行数限制值，采用OFFSET_LIMIT策略
    * @param variable a limit variable string
    * @return a self instance
    * @see #OFFSET(String)
@@ -354,8 +355,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the limit value.
-   *
+   * Set the limit value.<br>
+   * 设置查询行数限制值
    * @param value an offset value
    * @return a self instance
    * @see #OFFSET(long)
@@ -366,8 +367,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the offset variable string(e.g. {@code "#{offset}"}).
-   *
+   * Set the offset variable string(e.g. {@code "#{offset}"}).<br>
+   * 设置查询行数偏移量，采用OFFSET_LIMIT策略
    * @param variable a offset variable string
    * @return a self instance
    * @see #LIMIT(String)
@@ -380,8 +381,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the offset value.
-   *
+   * Set the offset value.<br>
+   * 设置偏移行数量值
    * @param value an offset value
    * @return a self instance
    * @see #LIMIT(int)
@@ -392,8 +393,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the fetch first rows variable string(e.g. {@code "#{fetchFirstRows}"}).
-   *
+   * Set the fetch first rows variable string(e.g. {@code "#{fetchFirstRows}"}).<br>
+   * 设置查询行数限制值，采用ISO策略
    * @param variable a fetch first rows variable string
    * @return a self instance
    * @see #OFFSET_ROWS(String)
@@ -406,8 +407,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the fetch first rows value.
-   *
+   * Set the fetch first rows value.<br>
+   * 设置查询行数限制值
    * @param value a fetch first rows value
    * @return a self instance
    * @see #OFFSET_ROWS(long)
@@ -419,7 +420,7 @@ public abstract class AbstractSQL<T> {
 
   /**
    * Set the offset rows variable string(e.g. {@code "#{offset}"}).
-   *
+   * 设置查询行数偏移量，采用ISO策略
    * @param variable a offset rows variable string
    * @return a self instance
    * @see #FETCH_FIRST_ROWS_ONLY(String)
@@ -432,8 +433,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * Set the offset rows value.
-   *
+   * Set the offset rows value.<br>
+   * 设置偏移行数量值
    * @param value an offset rows value
    * @return a self instance
    * @see #FETCH_FIRST_ROWS_ONLY(int)
@@ -444,7 +445,8 @@ public abstract class AbstractSQL<T> {
   }
 
   /**
-   * used to add a new inserted row while do multi-row insert.
+   * used to add a new inserted row while do multi-row insert.<br>
+   * 用于在进行多行插入时添加新的插入行。
    *
    * @return the t
    * @since 3.5.2
@@ -454,10 +456,20 @@ public abstract class AbstractSQL<T> {
     return getSelf();
   }
 
+  /**
+   * 获取sql语句SQLStatement对象
+   * @return
+   */
   private SQLStatement sql() {
     return sql;
   }
 
+  /**
+   * 通过追加的方式实现sql拼接
+   * @param a
+   * @param <A>
+   * @return
+   */
   public <A extends Appendable> A usingAppender(A a) {
     sql().sql(a);
     return a;
@@ -470,20 +482,41 @@ public abstract class AbstractSQL<T> {
     return sb.toString();
   }
 
+  /**
+   * 安全的sql 建造者模式中的建造者,
+   */
   private static class SafeAppendable {
+    /**
+     * 作用：附加字符序列和值的对象，
+     * 规则：字符为Unicode。
+     * 规则：线程不一定安全，是否安全是由实现类控制。
+     * 规则：错误（异常）可能传递到调用程序。因为方法本身既有抛出异常：IOException  和    IndexOutOfBoundsException
+     */
     private final Appendable appendable;
+    /**
+     * 初始化设置empty为true
+     */
     private boolean empty = true;
 
     public SafeAppendable(Appendable a) {
+      // 调用父类object的构造方法
       super();
       this.appendable = a;
     }
 
+    /**
+     * 1. CharSequence类是java.lang包下的一个接口，此接口对多种不同的对char访问的统一接口，像String、StringBuffer、StringBuilder类都是CharSequence的子接口；<br>
+     * 2. CharSequence类和String类都可以定义字符串，但是String定义的字符串只能读，CharSequence定义的字符串是可读可写的；<br>
+     * 3. 对于抽象类或者接口来说不可以直接使用new的方式创建对象，但是可以直接给它赋值；
+     * @param s
+     * @return
+     */
     public SafeAppendable append(CharSequence s) {
       try {
         if (empty && s.length() > 0) {
           empty = false;
         }
+        // 追加 sql 语句
         appendable.append(s);
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -497,30 +530,46 @@ public abstract class AbstractSQL<T> {
 
   }
 
+  /**
+   * sql语句类
+   */
   private static class SQLStatement {
 
+    /**
+     * 枚举类sql的四种操作
+     */
     public enum StatementType {
       DELETE, INSERT, SELECT, UPDATE
     }
 
+    /**
+     * 枚举实现——查询数据行数限制的"策略"
+     */
     private enum LimitingRowsStrategy {
+      // 没有行数限制策略
       NOP {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
           // NOP
         }
       },
+      // OFFSET 和 FETCH 策略
       ISO {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
+          // offset 10 rows ： 作用就是（假如20条数据，从第11条开始计算，前面10条就不要了）
+          // offset 0 rows ： 实际查询中不起任何作用
           if (offset != null) {
             builder.append(" OFFSET ").append(offset).append(" ROWS");
           }
+          // 从头部开始限制查找的条数
+          // FIRST和NEXT是同义词，因此，可以互换使用它们
           if (limit != null) {
             builder.append(" FETCH FIRST ").append(limit).append(" ROWS ONLY");
           }
         }
       },
+      // 使用limit 和 offset 限制行数
       OFFSET_LIMIT {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
@@ -533,14 +582,27 @@ public abstract class AbstractSQL<T> {
         }
       };
 
+      /**
+       * 抽象方法：查询数据行数限制的"策略"
+       * @param builder
+       * @param offset
+       * @param limit
+       */
       protected abstract void appendClause(SafeAppendable builder, String offset, String limit);
 
     }
 
+    // 语句类型，对应的枚举类
     StatementType statementType;
+
     List<String> sets = new ArrayList<>();
+
+    // 需要select的字段集合
     List<String> select = new ArrayList<>();
+
+    // 需要被查下的table集合
     List<String> tables = new ArrayList<>();
+
     List<String> join = new ArrayList<>();
     List<String> innerJoin = new ArrayList<>();
     List<String> outerJoin = new ArrayList<>();
@@ -563,6 +625,15 @@ public abstract class AbstractSQL<T> {
       valuesList.add(new ArrayList<>());
     }
 
+    /**
+     * 连接sql的7个部分的方法
+     * @param builder sql语句建造者对象
+     * @param keyword sql关键字：select from distinct等等
+     * @param parts 跟在sql关键字之后的字段集合，可能是字段名、表名
+     * @param open 左边界：可能是空字符串或者 左括号
+     * @param close 右边界：可能是空字符串或者 右括号
+     * @param conjunction 此部分parts的尾部字符：可能是逗号（字段）、and（where条件），join（连表条件），空字符
+     */
     private void sqlClause(SafeAppendable builder, String keyword, List<String> parts, String open, String close,
                            String conjunction) {
       if (!parts.isEmpty()) {
@@ -585,6 +656,18 @@ public abstract class AbstractSQL<T> {
       }
     }
 
+    /**
+     * 7部分的查询语句：<br>
+     * SELECT<br>
+     * FROM<br>
+     * JOIN<br>
+     * WHERE<br>
+     * GROUP BY<br>
+     * HAVING<br>
+     * ORDER BY<br>
+     * @param builder
+     * @return
+     */
     private String selectSQL(SafeAppendable builder) {
       if (distinct) {
         sqlClause(builder, "SELECT DISTINCT", select, "", "", ", ");
@@ -602,6 +685,10 @@ public abstract class AbstractSQL<T> {
       return builder.toString();
     }
 
+    /**
+     * sql连表的语句
+     * @param builder
+     */
     private void joins(SafeAppendable builder) {
       sqlClause(builder, "JOIN", join, "", "", "\nJOIN ");
       sqlClause(builder, "INNER JOIN", innerJoin, "", "", "\nINNER JOIN ");
@@ -610,6 +697,11 @@ public abstract class AbstractSQL<T> {
       sqlClause(builder, "RIGHT OUTER JOIN", rightOuterJoin, "", "", "\nRIGHT OUTER JOIN ");
     }
 
+    /**
+     * 插入数据的sql语句
+     * @param builder
+     * @return
+     */
     private String insertSQL(SafeAppendable builder) {
       sqlClause(builder, "INSERT INTO", tables, "", "", "");
       sqlClause(builder, "", columns, "(", ")", ", ");
@@ -619,6 +711,11 @@ public abstract class AbstractSQL<T> {
       return builder.toString();
     }
 
+    /**
+     * 删除数据的sql语句
+     * @param builder
+     * @return
+     */
     private String deleteSQL(SafeAppendable builder) {
       sqlClause(builder, "DELETE FROM", tables, "", "", "");
       sqlClause(builder, "WHERE", where, "(", ")", " AND ");
@@ -626,6 +723,11 @@ public abstract class AbstractSQL<T> {
       return builder.toString();
     }
 
+    /**
+     * 更新数据的sql语句
+     * @param builder
+     * @return
+     */
     private String updateSQL(SafeAppendable builder) {
       sqlClause(builder, "UPDATE", tables, "", "", "");
       joins(builder);
@@ -635,6 +737,11 @@ public abstract class AbstractSQL<T> {
       return builder.toString();
     }
 
+    /**
+     * 同传入一个实现Appendable的语句实现sql语句的拼接处理
+     * @param a
+     * @return
+     */
     public String sql(Appendable a) {
       SafeAppendable builder = new SafeAppendable(a);
       if (statementType == null) {
