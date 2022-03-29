@@ -33,7 +33,11 @@ import org.apache.ibatis.logging.LogFactory;
  * If the user provides a properties it uses it to translate database product name
  * key="Microsoft SQL Server", value="ms" will return "ms".
  * It can return null, if no database product name or
- * a properties was specified and no translation was found.
+ * a properties was specified and no translation was found.<br>
+ * 它以 databaseId 形式返回数据库产品名称。
+ * 如果用户提供了一个属性，它将使用它来翻译数据库产品名称
+ * key="Microsoft SQL Server", value="ms" 将返回 "ms"。
+ * 如果没有数据库产品名称或指定了一个属性，但没有找到对应值。
  *
  * @author Eduardo Macarron
  */

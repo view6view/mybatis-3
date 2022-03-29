@@ -117,53 +117,147 @@ public class Configuration {
   protected boolean nullableOnForEach;
 
   protected String logPrefix;
+  /*
+  设置日志的接口的实现级别
+   */
   protected Class<? extends Log> logImpl;
+  /*
+  调用VFS实现向外的 api 接口调用
+   */
   protected Class<? extends VFS> vfsImpl;
+  /*
+  默认的sql 类型
+   */
   protected Class<?> defaultSqlProviderType;
+  /*
+  本地插槽的范围
+   */
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
+  /*
+  设置空值的jdbcType
+   */
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+  /*
+  延迟加载触发器方法
+   */
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
+  /*
+  默认语句超时
+   */
   protected Integer defaultStatementTimeout;
+  /*
+  默认的提取大小
+   */
   protected Integer defaultFetchSize;
+  /*
+  默认的结果集合type，取决于驱动程序相同的行为
+   */
   protected ResultSetType defaultResultSetType;
+  /*
+  默认执行器的级别
+   */
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  /*
+  指定 MyBatis 是否以及如何自动将列映射到字段/属性。
+   */
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
+  /*
+  默认检测到自动映射目标的未知列（或未知属性类型）时的行为。
+   */
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
+  /*
+  持久化的变量配置，线程安全的
+   */
   protected Properties variables = new Properties();
+  /*
+  默认的反射工厂配置，默认开启缓存
+   */
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
+  /*
+  默认的对象工厂配置
+   */
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
+  /*
+  默认的对象包装工厂
+   */
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
 
+  /*
+  默认不开启延迟加载，延迟加载就是在需要⽤到数据时才进⾏加载，不需要⽤到数据时就不加载数据。延迟加载也称懒加载。
+   */
   protected boolean lazyLoadingEnabled = false;
+  /*
+  默认动态代理工厂为javassist
+   */
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
+  /*
+  数据库id
+   */
   protected String databaseId;
+
   /**
    * Configuration factory class.
-   * Used to create Configuration for loading deserialized unread properties.
-   *
+   * Used to create Configuration for loading deserialized unread properties.<br>
+   * 配置工厂类。用于创建配置以加载反序列化的未读属性。
    * @see <a href='https://github.com/mybatis/old-google-code-issues/issues/300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
 
+  /*
+  默认配置当前配置的映射注册器
+   */
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  /*
+  配置默认的拦截器链
+   */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+  /*
+  配置默认的类型处理器注册
+   */
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry(this);
+  /*
+  配置默认的类型别名注册
+   */
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+  /*
+  配置默认的语言驱动程序注册表
+   */
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
+  /*
+  配置map的key和对应的sql语句对象，key应该是 （Mapper接口类 + 接口方法id）
+   */
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
       .conflictMessageProducer((savedValue, targetValue) ->
           ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
+  /*
+  配置缓存map
+   */
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
+  /*
+  配置结果集map
+   */
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
+  /*
+  配置参数集map
+   */
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
+  /*
+  配置密匙生成器map
+   */
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
+  /*
+  加载资源set
+   */
   protected final Set<String> loadedResources = new HashSet<>();
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
+  /*
+  读取XML文件语句对象集合
+   */
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<>();
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<>();
@@ -182,24 +276,50 @@ public class Configuration {
   }
 
   public Configuration() {
+    /*
+    事务工厂设置
+     */
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
     typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
 
+    /*
+    连接池设置
+     */
+    // 采用服务器提供的JNDI技术实现，来获取DataSource对象，不同的服务器所能拿到的dataSource是不同的。
     typeAliasRegistry.registerAlias("JNDI", JndiDataSourceFactory.class);
+    // 传统的javax.sql.DataSource规范中的连接池，mybatis中有针对规范的实现
     typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
+    // 采用传统的获取连接的方式，虽然也实现了javax.sql.DataSource接口，但是并没有使用池的思想
     typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
 
+    /*
+    缓存设置
+     */
+    // 永久缓存
     typeAliasRegistry.registerAlias("PERPETUAL", PerpetualCache.class);
+    // 先进先出缓存，这个装饰器是限制缓存的大小(默认为1024)，当缓存数量超过设定值后，会按照先进先出的规则来删除最早添加的缓存。
     typeAliasRegistry.registerAlias("FIFO", FifoCache.class);
+    // 最近最少使用缓存，这个装饰器也会限制缓存的大小（默认也是1024），其会按照近期最少使用的方法进行缓存的删除。
     typeAliasRegistry.registerAlias("LRU", LruCache.class);
+    // 将value封装为SoftReference
     typeAliasRegistry.registerAlias("SOFT", SoftCache.class);
+    // 将value封装为WeakReference
     typeAliasRegistry.registerAlias("WEAK", WeakCache.class);
 
+    /*
+    数据库产品名称VENDOR（供应商）
+     */
     typeAliasRegistry.registerAlias("DB_VENDOR", VendorDatabaseIdProvider.class);
 
+    /*
+    静态语句驱动，默认识别xml
+     */
     typeAliasRegistry.registerAlias("XML", XMLLanguageDriver.class);
     typeAliasRegistry.registerAlias("RAW", RawLanguageDriver.class);
 
+    /*
+    日志
+     */
     typeAliasRegistry.registerAlias("SLF4J", Slf4jImpl.class);
     typeAliasRegistry.registerAlias("COMMONS_LOGGING", JakartaCommonsLoggingImpl.class);
     typeAliasRegistry.registerAlias("LOG4J", Log4jImpl.class);
@@ -208,6 +328,9 @@ public class Configuration {
     typeAliasRegistry.registerAlias("STDOUT_LOGGING", StdOutImpl.class);
     typeAliasRegistry.registerAlias("NO_LOGGING", NoLoggingImpl.class);
 
+    /*
+    动态代理的两种方式
+     */
     typeAliasRegistry.registerAlias("CGLIB", CglibProxyFactory.class);
     typeAliasRegistry.registerAlias("JAVASSIST", JavassistProxyFactory.class);
 

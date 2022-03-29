@@ -23,12 +23,21 @@ import java.sql.ResultSet;
 public enum ResultSetType {
   /**
    * behavior with same as unset (driver dependent).
-   *
+   * 取决于驱动程序相同的行为
    * @since 3.5.0
    */
   DEFAULT(-1),
+  /*
+  指示 <code>ResultSet</code> 对象类型的常量其光标只能向前移动。
+   */
   FORWARD_ONLY(ResultSet.TYPE_FORWARD_ONLY),
+  /*
+  指示 <code>ResultSet</code> 对象类型的常量可滚动但通常对数据更改不敏感<code>ResultSet</code> 的基础。
+   */
   SCROLL_INSENSITIVE(ResultSet.TYPE_SCROLL_INSENSITIVE),
+  /*
+  指示 <code>ResultSet</code> 对象类型的常量可滚动且通常对数据更改敏感<code>ResultSet</code> 的基础。
+   */
   SCROLL_SENSITIVE(ResultSet.TYPE_SCROLL_SENSITIVE);
 
   private final int value;

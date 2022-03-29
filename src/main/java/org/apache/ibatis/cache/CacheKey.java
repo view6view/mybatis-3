@@ -46,11 +46,23 @@ public class CacheKey implements Cloneable, Serializable {
   private static final int DEFAULT_HASHCODE = 17;
 
   private final int multiplier;
+  /**
+   * hashcode，用于表示CacheKey的哈希码
+   */
   private int hashcode;
+  /**
+   * 总和校验，当出现复合key的时候，分布计算每个key的哈希码，然后求总和
+   */
   private long checksum;
+  /**
+   * 当出现复合key的时候，计算key的总个数
+   */
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient. While true if content is not serializable, this
   // is not always true and thus should not be marked transient.
+  /**
+   * 当出现复合key的时候，保存每个key
+   */
   private List<Object> updateList;
 
   public CacheKey() {

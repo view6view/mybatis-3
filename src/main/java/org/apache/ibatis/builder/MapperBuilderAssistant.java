@@ -50,13 +50,26 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
- * @author Clinton Begin
+ * @author Clinton Begin<br>
+ * 映射器生成器助手
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
+  /*
+  mapper文件的命名空间
+   */
   private String currentNamespace;
+  /*
+  对应的资源路径
+   */
   private final String resource;
+  /**
+   * 当前的缓存对象
+   */
   private Cache currentCache;
+  /**
+   * 标志是否存在缓存引用出现问题
+   */
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
